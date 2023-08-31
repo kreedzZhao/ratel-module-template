@@ -1,3 +1,5 @@
 include ':demoapp',
+        ':crack-yrx',
+        ':crack-Dianping',
         ':createhelper',
         ':crack-demoapp'
