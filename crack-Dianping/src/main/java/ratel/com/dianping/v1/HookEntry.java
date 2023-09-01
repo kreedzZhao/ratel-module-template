@@ -92,16 +92,41 @@ public class HookEntry implements IRposedHookLoadPackage {
 //                }
 //        );
 
-        RposedBridge.hookAllConstructors(
-                RposedHelpers.findClass("com.dianping.dataservice.mapi.impl.DefaultMApiService.a", lpparam.classLoader),
+//        RposedBridge.hookAllConstructors(
+//                RposedHelpers.findClass("com.dianping.dataservice.mapi.impl.DefaultMApiService.a", lpparam.classLoader),
+//                new RC_MethodHook() {
+//                    @Override
+//                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                        super.beforeHookedMethod(param);
+//                        Log.d(tag, "enter DefaultMapi");
+//                        if (param.args[3] != null){
+//                            Log.d(tag, "decrypt class: "+ param.args[3].getClass());
+//                        }
+//                    }
+//                }
+//        );
+
+        // com.dianping.picasso.commonbridge.MapiModule#resolveData(com.dianping.archive.DPObject, boolean, int)
+        RposedHelpers.findAndHookMethod(
+                "com.dianping.picasso.commonbridge.MapiModule",
+                lpparam.classLoader,
+                "resolveData",
+                RposedHelpers.findClass("com.dianping.archive.DPObject", lpparam.classLoader),
+                boolean.class,
+                int.class,
                 new RC_MethodHook() {
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                         super.beforeHookedMethod(param);
-                        Log.d(tag, "enter DefaultMapi");
-                        if (param.args[3] != null){
-                            Log.d(tag, "decrypt class: "+ param.args[3].getClass());
-                        }
+                        Log.d(tag, "resolveData arg0: "+ JSONObject.toJSONString(ForceFiledViewer.toView(param.args[0])));
+                        Log.d(tag, "resolveData arg1: "+ param.args[1]);
+                        Log.d(tag, "resolveData arg2: "+ param.args[2]);
+                    }
+
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        Log.d(tag, "resolveData: " + param.getResult());
                     }
                 }
         );

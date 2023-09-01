@@ -37,3 +37,4 @@
 - com.dianping.dataservice.mapi.impl.DefaultMApiService.a#onRequestFinish 返回值
 - 另一个异步解密 com.dianping.dataservice.mapi.impl.DefaultMApiService.a 第三个参数fVal2 就是
 - com.dianping.picasso.commonbridge.MapiModule$3
+- com.dianping.picasso.commonbridge.MapiModule#resolveData(com.dianping.archive.DPObject, boolean, int)
