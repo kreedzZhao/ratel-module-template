@@ -33,49 +33,31 @@ public class HookEntry implements IRposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(final RC_LoadPackage.LoadPackageParam lpparam) {
-        // 其实任一事件进去之后，就可以看出来 com.baidu.titan.sdk.runtime.Interceptable
-        // 实现了一个全局的匿名类 $ic 开始是反射生成的
-        /*
-         this.mLoadFuture = newSingleThreadExecutor.submit(new java.util.concurrent.Callable<java.lang.Integer>() {
-            public java.lang.Integer call() throws java.lang.Exception {
-                int access$000 = com.baidu.titan.sdk.loader.LoaderManager.this.loadPatch(false, patchInstallInfo);
-                com.baidu.titan.sdk.loader.LoaderManager.this.mLoadState = access$000;
-                return java.lang.Integer.valueOf(access$000);
-            }
-        });
-         */
-        // com.baidu.titan.sdk.pm.PatchInstallInfo#getOrderedDexList
-        ClassLoadMonitor.addClassLoadMonitor(
-                "com.baidu.titan.sdk.pm.TitanPaths",
-                new ClassLoadMonitor.OnClassLoader() {
+
+
+        // com.baidu.platform.comjni.map.basemap.NABaseMap#nativeShowLayers(long j13, long j14, boolean z13)
+        RposedHelpers.findAndHookMethod(
+                "com.baidu.platform.comjni.map.basemap.NABaseMap",
+                lpparam.classLoader,
+                "nativeShowLayers",
+                long.class, long.class, boolean.class,
+                new RC_MethodHook() {
                     @Override
-                    public void onClassLoad(Class<?> clazz) {
-                        Log.d(TAG, "TitanPaths loaded");
-                        // com.baidu.titan.sdk.pm.TitanPaths#getPatchDir
-                        RposedHelpers.findAndHookMethod(
-                                "com.baidu.titan.sdk.pm.TitanPaths",
-                                lpparam.classLoader,
-                                "getPatchDir",
-                                String.class,
-                                new RC_MethodHook() {
-                                    @Override
-                                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                                        super.afterHookedMethod(param);
-                                        Log.i(TAG, "path dir: "+param.getResult().toString());
-                                    }
-                                }
-                        );
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        super.beforeHookedMethod(param);
+                        Log.d(TAG, "ShowHotMap param1: "+param.args[0]);
+                        Log.d(TAG, "ShowHotMap param2: "+param.args[1]);
+                        Log.d(TAG, "ShowHotMap param3: "+param.args[2], new Throwable());
                     }
                 }
         );
-
-
+        // at com.baidu.platform.comjni.map.basemap.NABaseMap.access$300(SourceFile:1)
 
         addFloatingButtonForActivity(lpparam);
         Log.i(TAG, "hook end");
     }
 
-    public void heatMap(RC_LoadPackage.LoadPackageParam lpparam){
+    public void heatMap(final RC_LoadPackage.LoadPackageParam lpparam){
         // com.baidu.mapframework.common.mapview.HeatMapView#onClicked
         RposedBridge.hookAllMethods(
                 RposedHelpers.findClass("com.baidu.mapframework.common.mapview.HeatMapView", lpparam.classLoader),
@@ -113,6 +95,92 @@ public class HookEntry implements IRposedHookLoadPackage {
                     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                         super.beforeHookedMethod(param);
                         Log.i(TAG, "regist param1 type: "+param.args[0]);
+                    }
+                }
+        );
+        // 其实任一事件进去之后，就可以看出来 com.baidu.titan.sdk.runtime.Interceptable
+        // 实现了一个全局的匿名类 $ic 开始是反射生成的
+        /*
+         this.mLoadFuture = newSingleThreadExecutor.submit(new java.util.concurrent.Callable<java.lang.Integer>() {
+            public java.lang.Integer call() throws java.lang.Exception {
+                int access$000 = com.baidu.titan.sdk.loader.LoaderManager.this.loadPatch(false, patchInstallInfo);
+                com.baidu.titan.sdk.loader.LoaderManager.this.mLoadState = access$000;
+                return java.lang.Integer.valueOf(access$000);
+            }
+        });
+         */
+        // com.baidu.titan.sdk.pm.PatchInstallInfo#getOrderedDexList
+        ClassLoadMonitor.addClassLoadMonitor(
+                "com.baidu.titan.sdk.pm.TitanPaths",
+                new ClassLoadMonitor.OnClassLoader() {
+                    @Override
+                    public void onClassLoad(Class<?> clazz) {
+                        Log.d(TAG, "TitanPaths loaded");
+                        // com.baidu.titan.sdk.pm.TitanPaths#getPatchDir
+                        RposedHelpers.findAndHookMethod(
+                                "com.baidu.titan.sdk.pm.TitanPaths",
+                                lpparam.classLoader,
+                                "getPatchDir",
+                                String.class,
+                                new RC_MethodHook() {
+                                    @Override
+                                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                        super.afterHookedMethod(param);
+                                        Log.i(TAG, "path dir: "+param.getResult().toString());
+                                    }
+                                }
+                        );
+                    }
+                }
+        );
+        // 发现热加载没用
+
+
+        // com.baidu.baidumaps.aihome.map.widget.AiHomeMapLayout#initViews
+        RposedHelpers.findAndHookMethod(
+                "com.baidu.baidumaps.aihome.map.widget.AiHomeMapLayout",
+                lpparam.classLoader,
+                "initViews",
+                new RC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        super.beforeHookedMethod(param);
+                        Log.d(TAG, "initViews", new Throwable());
+                    }
+                }
+        );
+
+        // 这个猜测是首页的定位事件
+        // "roadLoc": 怀疑这个是 aoi
+        // com.baidu.mapframework.common.mapview.action.LocationMapAction#updateLocOverlay
+        RposedHelpers.findAndHookMethod(
+                "com.baidu.mapframework.common.mapview.action.LocationMapAction",
+                lpparam.classLoader,
+                "updateLocOverlay",
+                RposedHelpers.findClass("com.baidu.mapframework.location.LocationManager.LocData", lpparam.classLoader),
+                RposedHelpers.findClass("com.baidu.mapframework.common.mapview.MapViewConfig.PositionStatus", lpparam.classLoader),
+                new RC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        super.beforeHookedMethod(param);
+                        Log.i(TAG, "updateLocOverlay param1: "+JSONObject.toJSONString(ForceFiledViewer.toView(param.args[0])));
+                        Log.i(TAG, "updateLocOverlay param2: "+JSONObject.toJSONString(ForceFiledViewer.toView(param.args[1])), new Throwable());
+                    }
+                }
+        );
+        // com.baidu.platform.comjni.map.basemap.AppBaseMap#ShowHotMap(boolean, int)
+        // com.baidu.platform.comjni.map.basemap.AppBaseMap#ShowLayers 发现展示热力图用的是 这个
+        RposedHelpers.findAndHookMethod(
+                "com.baidu.platform.comjni.map.basemap.AppBaseMap",
+                lpparam.classLoader,
+                "ShowLayers",
+                long.class, boolean.class,
+                new RC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        super.beforeHookedMethod(param);
+                        Log.d(TAG, "ShowHotMap param1: "+param.args[0]);
+                        Log.d(TAG, "ShowHotMap param2: "+param.args[1], new Throwable());
                     }
                 }
         );
