@@ -13,6 +13,7 @@ import android.widget.TabHost;
 import android.widget.TextView;
 
 import com.virjar.ratel.api.RatelToolKit;
+import com.virjar.ratel.api.extension.superappium.SuperAppium;
 import com.virjar.ratel.api.inspect.ClassLoadMonitor;
 import com.virjar.ratel.api.inspect.ForceFiledViewer;
 import com.virjar.ratel.api.rposed.IRposedHookLoadPackage;
@@ -20,8 +21,16 @@ import com.virjar.ratel.api.rposed.RC_MethodHook;
 import com.virjar.ratel.api.rposed.RposedBridge;
 import com.virjar.ratel.api.rposed.RposedHelpers;
 import com.virjar.ratel.api.rposed.callbacks.RC_LoadPackage;
+import com.virjar.sekiro.api.SekiroClient;
+import com.virjar.sekiro.log.SekiroLogger;
+
+
+
+import java.util.Map;
+import java.util.UUID;
 
 import external.com.alibaba.fastjson.JSONObject;
+
 
 /**
  * Created by virjar on 2018/10/6.
@@ -33,28 +42,45 @@ public class HookEntry implements IRposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(final RC_LoadPackage.LoadPackageParam lpparam) {
-
-
-        // com.baidu.platform.comjni.map.basemap.NABaseMap#nativeShowLayers(long j13, long j14, boolean z13)
-        RposedHelpers.findAndHookMethod(
-                "com.baidu.platform.comjni.map.basemap.NABaseMap",
+        /*
+        com.baidu.mapframework.provider.search.controller.OneSearchWrapper#OneSearchWrapper(
+        java.lang.String, java.lang.String, int,
+        com.baidu.platform.comapi.basestruct.MapBound,
+        int, com.baidu.platform.comapi.basestruct.Point,
+        java.util.Map<java.lang.String,java.lang.Object>,
+        int)
+         */
+        RposedHelpers.findAndHookConstructor(
+                "com.baidu.mapframework.provider.search.controller.OneSearchWrapper",
                 lpparam.classLoader,
-                "nativeShowLayers",
-                long.class, long.class, boolean.class,
+                String.class, String.class, int.class,
+                "com.baidu.platform.comapi.basestruct.MapBound", int.class,
+                "com.baidu.platform.comapi.basestruct.Point",
+                Map.class, int.class,
                 new RC_MethodHook() {
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                         super.beforeHookedMethod(param);
-                        Log.d(TAG, "ShowHotMap param1: "+param.args[0]);
-                        Log.d(TAG, "ShowHotMap param2: "+param.args[1]);
-                        Log.d(TAG, "ShowHotMap param3: "+param.args[2], new Throwable());
+                        Log.d(TAG, "OneSearchWrapper: "+ JSONObject.toJSONString(param.args));
                     }
                 }
         );
-        // at com.baidu.platform.comjni.map.basemap.NABaseMap.access$300(SourceFile:1)
 
+        startSekiro(lpparam);
         addFloatingButtonForActivity(lpparam);
         Log.i(TAG, "hook end");
+    }
+
+    public static void startSekiro(RC_LoadPackage.LoadPackageParam lpparam){
+        // 是否在主进程
+        if (!lpparam.packageName.equals(lpparam.processName)){
+            return;
+        }
+        SekiroLogger.tag = TAG;
+        SuperAppium.TAG = TAG;
+        SekiroClient.start("192.168.1.18",
+                UUID.randomUUID().toString(), "bdMap")
+                .registerHandler(new OneSearchHandler());
     }
 
     public void heatMap(final RC_LoadPackage.LoadPackageParam lpparam){
@@ -184,6 +210,24 @@ public class HookEntry implements IRposedHookLoadPackage {
                     }
                 }
         );
+
+        // com.baidu.platform.comjni.map.basemap.NABaseMap#nativeShowLayers(long j13, long j14, boolean z13)
+        RposedHelpers.findAndHookMethod(
+                "com.baidu.platform.comjni.map.basemap.NABaseMap",
+                lpparam.classLoader,
+                "nativeShowLayers",
+                long.class, long.class, boolean.class,
+                new RC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        super.beforeHookedMethod(param);
+                        Log.d(TAG, "ShowHotMap param1: "+param.args[0]);
+                        Log.d(TAG, "ShowHotMap param2: "+param.args[1]);
+                        Log.d(TAG, "ShowHotMap param3: "+param.args[2], new Throwable());
+                    }
+                }
+        );
+        // at com.baidu.platform.comjni.map.basemap.NABaseMap.access$300(SourceFile:1)
     }
 
 
@@ -254,6 +298,20 @@ public class HookEntry implements IRposedHookLoadPackage {
         );
 
         // com.baidu.mapframework.searchcontrol.baseline.SearchBaseLineImpl#sendRequest
+
+        // com.baidu.mapframework.searchcontrol.SearchControl#searchRequest
+        RposedBridge.hookAllMethods(
+                RposedHelpers.findClass("com.baidu.mapframework.searchcontrol.SearchControl", lpparam.classLoader),
+                "searchRequest",
+                new RC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        super.beforeHookedMethod(param);
+                        Log.i(TAG, "searchRequest param1 type: "+JSONObject.toJSONString(param.args[0]));
+                        Log.i(TAG, "searchRequest param2 type: "+param.args[1], new Throwable());
+                    }
+                }
+        );
 
     }
 

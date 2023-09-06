@@ -63,6 +63,8 @@ dependencies {
     // 使用sekiro新版本驱动的长链接调试框架（低版本的驱动在ratel-extersion中被提供），
     // 请注意在未来sekiro将会会完全废弃老版本的sekiro，之后只用使用下面的依赖
     // 另外如果你目前使用的是新版本的sekiro，也只能应用下面的依赖使用sekiro
-    // api 'com.virjar.sekiro.business:sekiro-ratel:1.1'
+//    implementation 'com.virjar.sekiro.business::sekiro-business-api:1.4'
+
+//    implementation 'com.iinti.sekiro3.business::sekiro-business-api:1.0'
     implementation 'com.getbase:floatingactionbutton:1.10.1'
 }
