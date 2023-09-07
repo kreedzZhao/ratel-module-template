@@ -1,4 +1,5 @@
 include ':demoapp',
+        ':crack-gdmap',
         ':crack-bdmap',
         ':crack-yrx',
         ':crack-Dianping',
