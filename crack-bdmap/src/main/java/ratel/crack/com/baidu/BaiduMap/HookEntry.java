@@ -42,6 +42,20 @@ public class HookEntry implements IRposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(final RC_LoadPackage.LoadPackageParam lpparam) {
+        // android.widget.Toast.makeText(android.content.Context, java.lang.CharSequence, int)
+        // android.widget.Toast.makeText toast 找不到，然后搜索字符串找到
+        // com.baidu.mapframework.common.mapview.action.RoadConditionLayerAction.onGetDataEngineRs
+        // com.baidu.mapframework.widget.MToast.show
+        // com.baidu.platform.comapi.util.UiThreadUtil$1.run
+        // com.baidu.mapframework.nirvana.concurrent.ConcurrentManager.executeTask 执行了新的线程
+        // com.baidu.mapframework.common.mapview.action.RoadConditionLayerAction.onRoadConditionClick
+
+        // com.baidu.platform.comapi.map.MapSurfaceView.setTraffic
+        // com.baidu.platform.comjni.map.basemap.NABaseMap#nativeShowHotMap
+        // com.baidu.platform.comjni.map.basemap.NABaseMap.creat
+
+
+
         /*
         com.baidu.mapframework.provider.search.controller.OneSearchWrapper#OneSearchWrapper(
         java.lang.String, java.lang.String, int,
