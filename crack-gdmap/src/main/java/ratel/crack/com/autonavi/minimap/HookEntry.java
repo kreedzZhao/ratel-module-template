@@ -3,6 +3,7 @@ package ratel.crack.com.autonavi.minimap;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -10,6 +11,7 @@ import android.os.Parcel;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import com.virjar.ratel.api.RatelToolKit;
 import com.virjar.ratel.api.inspect.ForceFiledViewer;
@@ -21,7 +23,12 @@ import com.virjar.ratel.api.rposed.callbacks.RC_LoadPackage;
 
 import java.net.URL;
 
-import external.com.alibaba.fastjson.JSONObject;
+import cn.iinti.sekiro3.business.api.SekiroClient;
+import cn.iinti.sekiro3.business.api.fastjson.JSONObject;
+import cn.iinti.sekiro3.business.api.interfaze.HandlerRegistry;
+import cn.iinti.sekiro3.business.api.interfaze.SekiroRequest;
+import cn.iinti.sekiro3.business.api.interfaze.SekiroRequestInitializer;
+import ratel.crack.com.autonavi.minimap.handlers.KeywordSearchHandler;
 
 /**
  * Created by virjar on 2018/10/6.
@@ -29,6 +36,7 @@ import external.com.alibaba.fastjson.JSONObject;
 
 public class HookEntry implements IRposedHookLoadPackage {
     private static final String TAG = "GD_HOOK";
+    private static final String clientId = Build.BRAND + "_" + Build.MODEL.replace(" ", "");
 
     public static void loge(String tag, String msg) {
         if (tag == null || tag.length() == 0 || msg == null || msg.length() == 0) {
@@ -52,33 +60,50 @@ public class HookEntry implements IRposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(final RC_LoadPackage.LoadPackageParam lpparam) {
-//        RposedBridge.hookAllConstructors(URL.class, new RC_MethodHook() {
-//            @Override
-//            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-//                String url = param.thisObject + "";
-////                Log.i(TAG, "access url:" + url);
-//                if (url.contains("search_poi/search")) {
-//                    Log.i(TAG, "hint url:", new Throwable());
-//                }
-//            }
-//        });
 
-        RposedHelpers.findAndHookMethod(Intent.class, "writeToParcel", Parcel.class, int.class,
-                new RC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        Intent intent = (Intent) param.thisObject;
-                        intent.getStringExtra("test");
-                        String sss = JSONObject.toJSONString(ForceFiledViewer.toView(intent));
-                        loge("Result", sss);
-                        Log.i(TAG, "intent writeToParcel: " + sss);
-                        Log.i(TAG, "intent writeToParcel trace:", new Throwable());
-                    }
-                });
+
+        startSekiro(lpparam);
 
 
         addFloatingButtonForActivity(lpparam);
         Log.i(TAG, "hook end");
+    }
+
+    public static void startSekiro(RC_LoadPackage.LoadPackageParam lpparam) {
+       if (!lpparam.packageName.equals(lpparam.processName)){
+           return;
+       }
+        SekiroClient client = new SekiroClient("gdmap", clientId, "172.16.12.40", 5612);
+       client.setupSekiroRequestInitializer(
+               new SekiroRequestInitializer() {
+                   @Override
+                   public void onSekiroRequest(SekiroRequest sekiroRequest, HandlerRegistry handlerRegistry) {
+                     handlerRegistry.registerSekiroHandler(new KeywordSearchHandler());
+                   }
+               }
+       );
+       client.start();
+
+    }
+
+    private void backup(RC_LoadPackage.LoadPackageParam lpparam){
+        // com.amap.network.http.HttpService#sendAos
+        RposedBridge.hookAllMethods(
+                RposedHelpers.findClass("com.amap.network.http.HttpService", lpparam.classLoader),
+                "sendAos",
+                new RC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        super.beforeHookedMethod(param);
+                        loge(TAG, "sendAos: " + JSONObject.toJSONString(ForceFiledViewer.toView(param.args[0])));
+                        Object getOption = RposedHelpers.callMethod(param.args[0], "getOption");
+                        Log.d(TAG, "sendAos.getOption: " + JSONObject.toJSONString(getOption));
+                        Object getBody = RposedHelpers.callMethod(param.args[0], "getBody");
+                        Object params = RposedHelpers.callMethod(getBody, "getParams");
+                        Log.i(TAG, "getBody.getParams: "+JSONObject.toJSONString(params));
+                    }
+                }
+        );
     }
 
 

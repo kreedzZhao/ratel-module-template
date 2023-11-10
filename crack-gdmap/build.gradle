@@ -59,7 +59,8 @@ dependencies {
     // ratel的扩展api，他一般是给逆向破解和爬虫业务使用，如果您只是基于ratel做一个插件，那么大多数情况不需要依赖他
     api 'com.virjar:ratel-extersion:1.0.6'
     // sekiro项目，他可以提供长链接RPC功能
-    api 'com.virjar:sekiro-api:1.0.3'
+//    implementation 'com.virjar.sekiro.business:sekiro-business-api:1.4'
+    implementation 'cn.iinti.sekiro3.business:sekiro-business-api:1.0'
     // 使用sekiro新版本驱动的长链接调试框架（低版本的驱动在ratel-extersion中被提供），
     // 请注意在未来sekiro将会会完全废弃老版本的sekiro，之后只用使用下面的依赖
     // 另外如果你目前使用的是新版本的sekiro，也只能应用下面的依赖使用sekiro
