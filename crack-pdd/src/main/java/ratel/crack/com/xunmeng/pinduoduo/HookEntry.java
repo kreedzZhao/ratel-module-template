@@ -28,6 +28,10 @@ import external.com.alibaba.fastjson.JSONObject;
 
 public class HookEntry implements IRposedHookLoadPackage {
     private static final String TAG = "PDD_HOOK";
+    /*
+    com.xunmeng.pinduoduo.search.fragment.SearchRequestController#N
+    这里 最后的 execute 是关键点，已经找的很清楚，但是当前没有办法修改smali，所以暂时停止了
+     */
 
 
     @Override
@@ -68,7 +72,8 @@ public class HookEntry implements IRposedHookLoadPackage {
 //                    @Override
 //                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 //                        super.beforeHookedMethod(param);
-//                        loge(TAG, "parseResponseString: " + param.args[0].toString());
+//                        Log.i(TAG, "parseResponseString success: "+param.args[0].toString(), new Throwable());
+////                        loge(TAG, "parseResponseString: " + param.args[0].toString());
 //                    }
 //                }
 //        );
@@ -89,25 +94,152 @@ public class HookEntry implements IRposedHookLoadPackage {
                     }
                 }
         );
-
-
-        // com.xunmeng.pinduoduo.arch.quickcall.e#a
+        // com.xunmeng.pinduoduo.search.fragment.SearchRequestController#S
         RposedBridge.hookAllMethods(
-                RposedHelpers.findClass("com.xunmeng.pinduoduo.arch.quickcall.e", lpparam.classLoader),
-                "a",
-//            RposedHelpers.findClass("okhttp3.f", lpparam.classLoader),
-//                RposedHelpers.findClass("com.xunmeng.pinduoduo.arch.quickcall.QuickCall", lpparam.classLoader),
-//                boolean.class,
+                RposedHelpers.findClass("com.xunmeng.pinduoduo.search.fragment.SearchRequestController", lpparam.classLoader),
+                "S",
+                new RC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        Log.i(TAG, "request tag: "+param.getResult().toString());
+                    }
+                }
+        );
+
+        RposedHelpers.findAndHookMethod(
+                "com.xunmeng.pinduoduo.search.fragment.SearchRequestController",
+                lpparam.classLoader,
+                "S",
+                new RC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        Log.i(TAG, "request tag: "+param.getResult().toString(), new Throwable());
+                    }
+                }
+        );
+        // com.xunmeng.pinduoduo.search.fragment.SearchRequestController#P
+        RposedHelpers.findAndHookMethod(
+                "com.xunmeng.pinduoduo.search.fragment.SearchRequestController",
+                lpparam.classLoader,
+                "P",
+                Map.class,
                 new RC_MethodHook() {
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                         super.beforeHookedMethod(param);
-                        Log.i(TAG, "QuickCall : "+JSONObject.toJSONString(param.args[1]), new Throwable());
-                        Log.i(TAG, "QuickCall : "+param.args[6].toString());
+                    }
+
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        Log.i(TAG, "request url : "+param.getResult().toString());
                     }
                 }
         );
-        // com.xunmeng.pinduoduo.net_base.hera.model.d
+
+        // com.xunmeng.pinduoduo.am.c#b
+        RposedHelpers.findAndHookMethod(
+                "com.xunmeng.pinduoduo.am.c",
+                lpparam.classLoader,
+                "b",
+                new RC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        Log.i(TAG, "request header: "+JSONObject.toJSONString(param.getResult()));
+                    }
+                }
+        );
+
+        // com.aimi.android.common.cmt.CMTCallback
+
+        // com.xunmeng.pinduoduo.search.fragment.SearchInputFragment.w
+//        RposedHelpers.findAndHookMethod(
+//                "com.xunmeng.pinduoduo.search.fragment.SearchInputFragment",
+//                lpparam.classLoader,
+//                "w",
+//                String.class, int.class,
+//                new RC_MethodHook() {
+//                    @Override
+//                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                        super.beforeHookedMethod(param);
+//                        Log.i(TAG, "SearchInputFragment arg0: "+param.args[0], new Throwable());
+//                        Log.i(TAG, "SearchInputFragment arg1: "+param.args[1], new Throwable());
+//                    }
+//                }
+//        );
+
+        // com.xunmeng.pinduoduo.search.fragment.LiveDataBus.a#setValue
+//        RposedHelpers.findAndHookMethod(
+//                "com.xunmeng.pinduoduo.search.fragment.LiveDataBus.a",
+//                lpparam.classLoader,
+//                "setValue",
+//                RposedHelpers.findClass("com.xunmeng.pinduoduo.search.entity.n", lpparam.classLoader),
+//                new RC_MethodHook() {
+//                    @Override
+//                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                        super.beforeHookedMethod(param);
+//                        loge(TAG, "setValue: "+JSONObject.toJSONString(ForceFiledViewer.toView(param.args[0])));
+//                    }
+//                }
+//        );
+
+        // com.xunmeng.pinduoduo.search.fragment.LiveDataBus.a#observe
+        // android.arch.lifecycle.LiveData#observe
+//        RposedHelpers.findAndHookMethod(
+//                "android.arch.lifecycle.LiveData",
+//                lpparam.classLoader,
+//                "observe",
+//                RposedHelpers.findClass("android.arch.lifecycle.LifecycleOwner", lpparam.classLoader),
+//                RposedHelpers.findClass("android.arch.lifecycle.Observer", lpparam.classLoader),
+//                new RC_MethodHook() {
+//                    @Override
+//                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                        super.beforeHookedMethod(param);
+//                        Log.i(TAG, "observe arg0: "+param.args[0], new Throwable());
+//                        Log.i(TAG, "observe arg1: "+param.args[1]);
+//                    }
+//                }
+//        );
+
+//        RposedHelpers.findAndHookMethod(
+//                "android.arch.lifecycle.LiveData",
+//                lpparam.classLoader,
+//                "observeForever",
+//                RposedHelpers.findClass("android.arch.lifecycle.Observer", lpparam.classLoader),
+//                new RC_MethodHook() {
+//                    @Override
+//                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                        super.beforeHookedMethod(param);
+//                        Log.i(TAG, "observeForever arg0: "+param.args[0], new Throwable());
+//                    }
+//                }
+//        );
+
+        /*
+        void innerExecute(long j)
+        组装请求 final com.xunmeng.pinduoduo.arch.quickcall.QuickCall L = o.v(str, afVar).x(this.gzip).p(this.headers).E(false).C(isUseCmt()).m(priorityInterceptor(url2)).w(this.retryCnt).z(this.tag).y(this.customShardKey, this.customShardValue).i(this.extensionMap).j(recordHttpCallStart).L();
+        使用默认的解析，内部调用了 enqueue
+        L.x();
+        d.a(this.f, this, false, bVar, E, this.k, H()); 这里其实就是 okhttp 源码了，this.f 需要看看是什么类型
+         */
+
+        // com.xunmeng.pinduoduo.arch.quickcall.e#a
+//        RposedBridge.hookAllMethods(
+//                RposedHelpers.findClass("com.xunmeng.pinduoduo.arch.quickcall.e", lpparam.classLoader),
+//                "a",
+//                new RC_MethodHook() {
+//                    @Override
+//                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                        super.beforeHookedMethod(param);
+//                        Log.i(TAG, "quickcall.e#a: "+param.args[0], new Throwable());
+//                    }
+//                }
+//        );
+
+
 
         addFloatingButtonForActivity(lpparam);
         Log.i(TAG, "hook end");

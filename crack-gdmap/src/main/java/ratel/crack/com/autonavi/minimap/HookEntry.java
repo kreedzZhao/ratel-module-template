@@ -73,7 +73,7 @@ public class HookEntry implements IRposedHookLoadPackage {
        if (!lpparam.packageName.equals(lpparam.processName)){
            return;
        }
-        SekiroClient client = new SekiroClient("gdmap", clientId, "172.16.12.40", 5612);
+        SekiroClient client = new SekiroClient("gdmap", clientId, "192.168.0.104", 5612);
        client.setupSekiroRequestInitializer(
                new SekiroRequestInitializer() {
                    @Override
