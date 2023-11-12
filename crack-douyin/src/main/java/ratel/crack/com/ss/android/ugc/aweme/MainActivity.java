@@ -1,14 +1,9 @@
-package ratel.com.yuanrenxue.challenge;
+package ratel.crack.com.ss.android.ugc.aweme;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
-
-    static {
-        System.loadLibrary("ratel-so");
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

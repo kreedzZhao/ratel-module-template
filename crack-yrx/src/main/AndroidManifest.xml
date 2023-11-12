@@ -11,6 +11,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        
+        <provider
+            android:authorities="ratel.com.yuanrenxue.challenge"
+            android:name=".provider.SoProvider"
+            android:enabled="true"
+            android:exported="true"
+            android:grantUriPermissions="true"/>
 
         <meta-data android:name="xposedminversion" android:value="54"/>
 

@@ -1,0 +1,3 @@
+/Users/lovehbg/Documents/kreedz/ratel-learning/ratel-module-template/crack-yrx/.cxx/cmake/debug/arm64-v8a/CMakeFiles/rebuild_cache.dir
+/Users/lovehbg/Documents/kreedz/ratel-learning/ratel-module-template/crack-yrx/.cxx/cmake/debug/arm64-v8a/CMakeFiles/edit_cache.dir
+/Users/lovehbg/Documents/kreedz/ratel-learning/ratel-module-template/crack-yrx/.cxx/cmake/debug/arm64-v8a/CMakeFiles/ratel-so.dir

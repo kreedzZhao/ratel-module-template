@@ -1,0 +1,2 @@
+ninja: Entering directory `/Users/lovehbg/Documents/kreedz/ratel-learning/ratel-module-template/crack-yrx/.cxx/cmake/debug/arm64-v8a'
+ninja: no work to do.
