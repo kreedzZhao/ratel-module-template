@@ -11,6 +11,14 @@ android {
         versionCode 1
         versionName "1.0"
 
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++11'
+            }
+        }
+        ndk {
+            abiFilters "arm64-v8a"
+        }
 
     }
 
@@ -39,6 +47,17 @@ android {
 
     lintOptions {
         abortOnError false
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.18.1'
+        }
+    }
+
+    aaptOptions {
+        noCompress "so", "js"
     }
 
     packagingOptions {

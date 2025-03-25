@@ -1,7 +1,10 @@
 package ratel.com.dianping.v1;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -19,6 +22,9 @@ import com.virjar.ratel.api.rposed.callbacks.RC_LoadPackage;
 
 import external.com.alibaba.fastjson.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.net.URL;
 
 import cn.iinti.sekiro3.business.api.SekiroClient;
@@ -31,16 +37,89 @@ import cn.iinti.sekiro3.business.api.interfaze.SekiroResponse;
  */
 
 public class HookEntry implements IRposedHookLoadPackage {
-    private static final String tag = "DP_HOOK";
+    private static final String TAG = "DP_HOOK";
 
+    public static String copyFromPlugin(String fileName){
+        // 只有加载特定的 lib 才执行
+        Context sContext = RatelToolKit.sContext;
+        // 通过 content provider 获取 so 文件
+        if (sContext == null) {
+            Log.e(TAG, "context is null.");
+            return null;
+        }
+
+        try {
+
+            File injectSo = new File(sContext.getFilesDir(), fileName);
+            Uri uri = Uri.parse("content://ratel.com.dianping.v1/assets/sodir/arm64-v8a/"+fileName);
+
+            ContentResolver contentResolver = sContext.getContentResolver();
+            AssetFileDescriptor afd = contentResolver.openAssetFileDescriptor(uri, "r", null);
+            // 其实对于正常运行不会有影响，为了健壮性
+            if (afd == null) {
+                Log.e(TAG, "afterHookedMethod: invalid afd");
+                return null;
+            }
+            if (afd.getLength() > Integer.MAX_VALUE) {
+                Log.e(TAG, "afterHookedMethod: file too large");
+                return null;
+            }
+            int aLength = (int) afd.getLength();
+            FileInputStream is = afd.createInputStream();
+            //  复制到 injectSo 位置
+            byte[] bytes = new byte[aLength];
+            is.read(bytes, 0, aLength);
+            FileOutputStream os = new FileOutputStream(injectSo);
+            Log.i(TAG, "afterHookedMethod: load ratel so plugin finished. path: " + injectSo.getAbsolutePath());
+            os.write(bytes);
+            is.close();
+            os.close();
+            afd.close();
+            return injectSo.getAbsolutePath();
+        } catch (Exception e){
+            Log.e(TAG, "afterHookedMethod: failed load so plugin");
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     @Override
     public void handleLoadPackage(final RC_LoadPackage.LoadPackageParam lpparam) {
 
         addFloatingButtonForActivity(lpparam);
-        Log.i(tag, "hook end");
+        Log.i(TAG, "hook end");
 
-        startSekiro(lpparam);
+        RposedHelpers.findAndHookMethod(
+                Runtime.getRuntime().getClass(),
+                "loadLibrary0",
+                Class.class, String.class,
+                new RC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        super.beforeHookedMethod(param);
+                        Log.i(TAG, "beforeHookedMethod: " + param.args[1]);
+                    }
+
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        Log.i(TAG, "afterHookedMethod: " + param.args[1]);
+//                        if ("mtguard".equals(param.args[1])) {
+                        if ("cips".equals(param.args[1])) {
+                            String soPath = copyFromPlugin("libcrack-dp.so");
+                            copyFromPlugin("libgadget.config.so");
+                            copyFromPlugin("trace.js");
+                            String gadgetPath = copyFromPlugin("libgadget.so");
+                            if (soPath != null) {
+                                System.load(soPath);
+                                System.load(gadgetPath);
+                            }
+                        }
+                    }
+                }
+        );
+
+//        startSekiro(lpparam);
 
 //        RposedBridge.hookAllConstructors(URL.class, new RC_MethodHook() {
 //            @Override
@@ -52,7 +131,7 @@ public class HookEntry implements IRposedHookLoadPackage {
 //                }
 //            }
 //        });
-        // com.dianping.nvnetwork.Request
+//         com.dianping.nvnetwork.Request
 //        RposedBridge.hookAllConstructors(
 //                RposedHelpers.findClass("com.dianping.nvnetwork.Request", lpparam.classLoader),
 //                new RC_MethodHook() {
@@ -63,7 +142,7 @@ public class HookEntry implements IRposedHookLoadPackage {
 //                    }
 //                }
 //        );
-        // com.dianping.nvnetwork.NVDefaultNetworkService#exec(com.dianping.nvnetwork.Request, com.dianping.nvnetwork.o)
+////         com.dianping.nvnetwork.NVDefaultNetworkService#exec(com.dianping.nvnetwork.Request, com.dianping.nvnetwork.o)
 //        RposedBridge.hookAllMethods(
 //                RposedHelpers.findClass("com.dianping.nvnetwork.NVDefaultNetworkService", lpparam.classLoader),
 //                "exec",
@@ -92,19 +171,19 @@ public class HookEntry implements IRposedHookLoadPackage {
 //                }
 //        );
 
-//        RposedBridge.hookAllConstructors(
-//                RposedHelpers.findClass("com.dianping.dataservice.mapi.impl.DefaultMApiService.a", lpparam.classLoader),
-//                new RC_MethodHook() {
-//                    @Override
-//                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-//                        super.beforeHookedMethod(param);
-//                        Log.d(tag, "enter DefaultMapi");
-//                        if (param.args[3] != null){
-//                            Log.d(tag, "decrypt class: "+ param.args[3].getClass());
-//                        }
-//                    }
-//                }
-//        );
+        RposedBridge.hookAllConstructors(
+                RposedHelpers.findClass("com.dianping.dataservice.mapi.impl.DefaultMApiService.a", lpparam.classLoader),
+                new RC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        super.beforeHookedMethod(param);
+                        Log.d(TAG, "enter DefaultMapi");
+                        if (param.args[3] != null){
+                            Log.d(TAG, "decrypt class: "+ param.args[3].getClass());
+                        }
+                    }
+                }
+        );
 
         // com.dianping.picasso.commonbridge.MapiModule#resolveData(com.dianping.archive.DPObject, boolean, int)
         RposedHelpers.findAndHookMethod(
@@ -118,15 +197,15 @@ public class HookEntry implements IRposedHookLoadPackage {
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                         super.beforeHookedMethod(param);
-                        Log.d(tag, "resolveData arg0: "+ JSONObject.toJSONString(ForceFiledViewer.toView(param.args[0])));
-                        Log.d(tag, "resolveData arg1: "+ param.args[1]);
-                        Log.d(tag, "resolveData arg2: "+ param.args[2]);
+                        Log.d(TAG, "resolveData arg0: "+ JSONObject.toJSONString(ForceFiledViewer.toView(param.args[0])));
+                        Log.d(TAG, "resolveData arg1: "+ param.args[1]);
+                        Log.d(TAG, "resolveData arg2: "+ param.args[2]);
                     }
 
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                         super.afterHookedMethod(param);
-                        Log.d(tag, "resolveData: " + param.getResult());
+                        Log.d(TAG, "resolveData: " + param.getResult());
                     }
                 }
         );
@@ -134,7 +213,7 @@ public class HookEntry implements IRposedHookLoadPackage {
     }
 
     private static void startSekiro(RC_LoadPackage.LoadPackageParam lpparam) {
-        new SekiroClient("test", "testClient", "192.168.1.13", 5612)
+        new SekiroClient("DP", "pixel4", "192.168.0.106", 5620)
                 .setupSekiroRequestInitializer((sekiroRequest, handlerRegistry) ->
                         // 注册一个接口，名为testAction
                         handlerRegistry.registerSekiroHandler(new ActionHandler() {
@@ -146,7 +225,7 @@ public class HookEntry implements IRposedHookLoadPackage {
                             @Override
                             public void handleRequest(SekiroRequest sekiroRequest, SekiroResponse sekiroResponse) {
                                 // 接口处理逻辑，我们不做任何处理，直接返回字符串：ok
-                                Log.d(tag, "sekiro received. ");
+                                Log.d(TAG, "sekiro received. ");
                                 sekiroResponse.success("ok");
                             }
                         })

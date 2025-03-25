@@ -46,3 +46,7 @@ script/dist
 script/dist.zip
 
 container-builder-repkg/src/main/resources/ratel_engine.properties
+.cxx/
+libgadget.so
+libcrack-xhs.so
+libcrack-dp.so

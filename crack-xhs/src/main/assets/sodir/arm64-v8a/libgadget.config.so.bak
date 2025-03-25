@@ -1,0 +1,16 @@
+{
+  "interaction": {
+    "type": "listen",
+    "on_port_conflict": "fail",
+    "on_load": "wait",
+    "address": "0.0.0.0",
+    "port": 14725
+  }
+}
+
+{
+    "interaction": {
+      "type": "script",
+      "path": "/data/user/0/com.xingin.xhs/files/trace.js"
+    }
+}
